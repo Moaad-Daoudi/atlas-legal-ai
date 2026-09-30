@@ -11,6 +11,7 @@ __pycache__/
 # --- Large AI Models (Crucial: Do not commit these!) ---
 models/
 vector_database/
+**/faiss_index/
 
 # --- Node/Frontend ---
 frontend/node_modules/

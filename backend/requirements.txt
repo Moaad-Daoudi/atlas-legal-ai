@@ -8,6 +8,9 @@ accelerate
 sentence-transformers
 langchain-community
 langchain-core
+langchain-text-splitters
 faiss-cpu
 unsloth
 huggingface_hub
+python-dotenv
+pypdf
