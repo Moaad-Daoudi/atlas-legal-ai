@@ -110,9 +110,14 @@ class LegalRAGPipeline:
         print(f"Split {len(documents)} source documents into {len(docs)} chunks.")
 
         embeddings = HuggingFaceEmbeddings(model_name="intfloat/multilingual-e5-large")
+        # Multilingual E5 is trained with passage/query prefixes for retrieval.
+        for doc in docs:
+            doc.page_content = f"passage: {doc.page_content}"
+
         index_dir = data_dirs[0] / "faiss_index"
         manifest_path = index_dir / "sources.sha256"
         digest = hashlib.sha256()
+        digest.update(b"rag-index-v2|multilingual-e5-large|passage-query-prefix|chunk=1000|overlap=180")
         for path in source_paths:
             digest.update(path.name.encode("utf-8"))
             with path.open("rb") as source:
@@ -143,16 +148,18 @@ class LegalRAGPipeline:
         if self.vector_store is None:
             return "RAG not initialized."
 
-        retriever = self.vector_store.as_retriever(search_kwargs={"k": 4})
-        docs = retriever.invoke(question)
+        retriever = self.vector_store.as_retriever(search_kwargs={"k": 6})
+        docs = retriever.invoke(f"query: {question}")
 
         if not docs:
             return "Information not found in legal context."
 
-        docs = docs[:4]
+        docs = docs[:6]
 
         context = "\n\nLEGAL CONTEXT:\n"
-        context += "\n---\n".join([doc.page_content for doc in docs])
+        context += "\n---\n".join(
+            doc.page_content.removeprefix("passage: ") for doc in docs
+        )
 
         print("\n========== RETRIEVED CONTEXT ==========")
         print(context)
